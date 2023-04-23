@@ -1141,6 +1141,7 @@ async function runConfigHook(
   let conf = config
   // 遍历前二次排序
   for (const p of getSortedPluginsByHook('config', plugins)) {
+    // 遍历每个plugin，获取config，这个config如果没有处理就是用户配置的config，如果用户在config钩子中对config进行了处理并return了，那么获取return的config
     const hook = p.config
     const handler = hook && 'handler' in hook ? hook.handler : hook
     if (handler) {
