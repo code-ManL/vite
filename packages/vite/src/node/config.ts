@@ -457,7 +457,7 @@ export async function resolveConfig(
 
   // run config hooks，执行配置文件
   const userPlugins = [...prePlugins, ...normalPlugins, ...postPlugins]
-  // 执行用户的plugin
+  // 遍历用户的 plugin，返回最终的 config 配置
   config = await runConfigHook(config, userPlugins, configEnv)
 
   if (process.env.VITE_TEST_WITHOUT_PLUGIN_COMMONJS) {
@@ -475,7 +475,7 @@ export async function resolveConfig(
     customLogger: config.customLogger,
   })
 
-  // resolve root
+  // resolve root，设置项目根目录，默认位执行目录也就是process.cwd
   const resolvedRoot = normalizePath(
     config.root ? path.resolve(config.root) : process.cwd(),
   )
@@ -540,12 +540,14 @@ export async function resolveConfig(
   // During dev, we ignore relative base and fallback to '/'
   // For the SSR build, relative base isn't possible by means
   // of import.meta.url.
+  // 设置baseUrl
   const resolvedBase = relativeBaseShortcut
     ? !isBuild || config.build?.ssr
       ? '/'
       : './'
     : resolveBaseUrl(config.base, isBuild, logger) ?? '/'
 
+  // 处理build配置，vite内置build的配置和用户的配置整合起来
   const resolvedBuildOptions = resolveBuildOptions(
     config.build,
     logger,
@@ -554,6 +556,7 @@ export async function resolveConfig(
 
   // resolve cache directory
   const pkgDir = findNearestPackageData(resolvedRoot, packageCache)?.dir
+  // 设置缓存
   const cacheDir = normalizePath(
     config.cacheDir
       ? path.resolve(resolvedRoot, config.cacheDir)
@@ -647,6 +650,7 @@ export async function resolveConfig(
     ...workerPostPlugins,
   ]
   workerConfig = await runConfigHook(workerConfig, workerUserPlugins, configEnv)
+
   const resolvedWorkerOptions: ResolveWorkerOptions = {
     format: workerConfig.worker?.format || 'iife',
     plugins: [],
@@ -706,7 +710,7 @@ export async function resolveConfig(
         ...optimizeDeps.esbuildOptions,
       },
     },
-    worker: resolvedWorkerOptions,
+    worker: resolvedWorkerOptions, // worker
     appType: config.appType ?? (middlewareMode === 'ssr' ? 'custom' : 'spa'),
     experimental: {
       importGlobRestoreExtension: false,
@@ -721,12 +725,15 @@ export async function resolveConfig(
     ...resolvedConfig,
   }
 
+  // 处理各个plugins，执行前的最后整理
   ;(resolved.plugins as Plugin[]) = await resolvePlugins(
     resolved,
     prePlugins,
     normalPlugins,
     postPlugins,
   )
+
+  // helper
   Object.assign(resolved, createPluginHookUtils(resolved.plugins))
 
   const workerResolved: ResolvedConfig = {
@@ -746,7 +753,7 @@ export async function resolveConfig(
     createPluginHookUtils(resolvedConfig.worker.plugins),
   )
 
-  // call configResolved hooks
+  // call configResolved hooks 正式开始执行plugins
   await Promise.all([
     ...resolved
       .getSortedPluginHooks('configResolved')
@@ -1138,14 +1145,24 @@ async function runConfigHook(
   plugins: Plugin[],
   configEnv: ConfigEnv,
 ): Promise<InlineConfig> {
+  // vite.config.ts的基础配置
   let conf = config
   // 遍历前二次排序
   for (const p of getSortedPluginsByHook('config', plugins)) {
-    // 遍历每个plugin，获取config，这个config如果没有处理就是用户配置的config，如果用户在config钩子中对config进行了处理并return了，那么获取return的config
     const hook = p.config
+    /**
+     * config:{
+     *  handler(){}
+     * }
+     *
+     * config(){}
+     */
     const handler = hook && 'handler' in hook ? hook.handler : hook
+    // 如果有设置config钩子
     if (handler) {
+      // 调用 config 钩子，注入conf，conf就是 vite.config.ts 的基础配置
       const res = await handler(conf, configEnv)
+      // 如果 config 钩子返回了内容，在这里进行 merge 合并，形成最终的配置，没有就继续遍历下一个plugin
       if (res) {
         conf = mergeConfig(conf, res)
       }

@@ -27,13 +27,16 @@ import { dynamicImportVarsPlugin } from './dynamicImportVars'
 import { importGlobPlugin } from './importMetaGlob'
 
 export async function resolvePlugins(
-  config: ResolvedConfig, // 用户配置在 inlineConfig 属性中
-  prePlugins: Plugin[],
-  normalPlugins: Plugin[],
-  postPlugins: Plugin[],
+  config: ResolvedConfig,
+  prePlugins: Plugin[], // 用户配置的prePlugins
+  normalPlugins: Plugin[], // 用户配置的normalPlugins
+  postPlugins: Plugin[], // 用户配置的postPlugins
 ): Promise<Plugin[]> {
+  // 判断环境
   const isBuild = config.command === 'build'
+  // 是否开启监听
   const isWatch = isBuild && !!config.build.watch
+  // 如果是生产环境获取打包的plugins
   const buildPlugins = isBuild
     ? await (await import('../build')).resolveBuildPlugins(config)
     : { pre: [], post: [] }
@@ -43,11 +46,15 @@ export async function resolvePlugins(
     isWatch ? ensureWatchPlugin() : null,
     isBuild ? metadataPlugin() : null,
     watchPackageDataPlugin(config.packageCache),
+    // vite-alias插件
     preAliasPlugin(config),
+    // 用的rollup的alias插件
     aliasPlugin({ entries: config.resolve.alias }),
+    // 用户的 prePlugins
     ...prePlugins,
+    // config.build
     modulePreload === true ||
-    (typeof modulePreload === 'object' && modulePreload.polyfill)
+    (typeof modulePreload === 'object' && modulePreload.polyfill) // config.build.polyfill
       ? modulePreloadPolyfillPlugin(config)
       : null,
     ...(isDepsOptimizerEnabled(config, false) ||
@@ -58,6 +65,7 @@ export async function resolvePlugins(
             : optimizedDepsPlugin(config),
         ]
       : []),
+    // vite:resolve 插件
     resolvePlugin({
       ...config.resolve,
       root: config.root,
@@ -72,9 +80,13 @@ export async function resolvePlugins(
           ? (id) => shouldExternalizeForSSR(id, config)
           : undefined,
     }),
+    // vite:html-inline-proxy 插件
     htmlInlineProxyPlugin(config),
+    // vite:css 插件
     cssPlugin(config),
+    // vite:esbuild 插件
     config.esbuild !== false ? esbuildPlugin(config) : null,
+    // vite:json 插件
     jsonPlugin(
       {
         namedExports: true,
@@ -82,12 +94,19 @@ export async function resolvePlugins(
       },
       isBuild,
     ),
+    // vite:wasm-helper 插件
     wasmHelperPlugin(config),
+    // vite:worker 插件
     webWorkerPlugin(config),
+    // vite:asset 插件
     assetPlugin(config),
+    // 用户的normal插件
     ...normalPlugins,
+    // vite:wasm-fallback 插件
     wasmFallbackPlugin(),
+    // vite:define 插件
     definePlugin(config),
+    // vite:css-post 插件
     cssPostPlugin(config),
     isBuild && buildHtmlPlugin(config),
     workerImportMetaUrlPlugin(config),
@@ -95,6 +114,7 @@ export async function resolvePlugins(
     ...buildPlugins.pre,
     dynamicImportVarsPlugin(config),
     importGlobPlugin(config),
+    // 用户的post插件
     ...postPlugins,
     ...buildPlugins.post,
     // internal server-only plugins are always applied after everything else
