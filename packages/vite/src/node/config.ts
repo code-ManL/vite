@@ -408,6 +408,7 @@ export async function resolveConfig(
 
   let { configFile } = config
   if (configFile !== false) {
+    // 获取用户的配置文件
     const loadResult = await loadConfigFromFile(
       configEnv,
       configFile,
@@ -415,12 +416,15 @@ export async function resolveConfig(
       config.logLevel,
     )
     if (loadResult) {
+      // 合并配置文件,loadResult.config就是用户的vite配置文件
+      // interface InlineConfig extends UserConfig
       config = mergeConfig(loadResult.config, config)
       configFile = loadResult.path
       configFileDependencies = loadResult.dependencies
     }
   }
 
+  // --mode的优先级更高
   // user config may provide an alternative mode. But --mode has a higher priority
   mode = inlineConfig.mode || config.mode || mode
   configEnv.mode = mode
@@ -443,7 +447,7 @@ export async function resolveConfig(
     (await asyncFlatten(config.worker?.plugins || [])) as Plugin[]
   ).filter(filterPlugin)
 
-  // resolve plugins
+  // resolve plugins，处理用户的plugins
   const rawUserPlugins = (
     (await asyncFlatten(config.plugins || [])) as Plugin[]
   ).filter(filterPlugin)
@@ -451,8 +455,9 @@ export async function resolveConfig(
   const [prePlugins, normalPlugins, postPlugins] =
     sortUserPlugins(rawUserPlugins)
 
-  // run config hooks
+  // run config hooks，执行配置文件
   const userPlugins = [...prePlugins, ...normalPlugins, ...postPlugins]
+  // 执行用户的plugin
   config = await runConfigHook(config, userPlugins, configEnv)
 
   if (process.env.VITE_TEST_WITHOUT_PLUGIN_COMMONJS) {
@@ -940,7 +945,9 @@ export async function loadConfigFromFile(
   }
 
   try {
+    // bundle用户配置
     const bundled = await bundleConfigFile(resolvedPath, isESM)
+    // 加工用户配置，获取用户配置
     const userConfig = await loadConfigFromBundledFile(
       resolvedPath,
       bundled.code,
@@ -1081,6 +1088,7 @@ interface NodeModuleWithCompile extends NodeModule {
   _compile(code: string, filename: string): any
 }
 
+// 构造require
 const _require = createRequire(import.meta.url)
 async function loadConfigFromBundledFile(
   fileName: string,
@@ -1109,6 +1117,7 @@ async function loadConfigFromBundledFile(
     const realFileName = await fsp.realpath(fileName)
     const loaderExt = extension in _require.extensions ? extension : '.js'
     const defaultLoader = _require.extensions[loaderExt]!
+
     _require.extensions[loaderExt] = (module: NodeModule, filename: string) => {
       if (filename === realFileName) {
         ;(module as NodeModuleWithCompile)._compile(bundledCode, filename)
@@ -1130,7 +1139,7 @@ async function runConfigHook(
   configEnv: ConfigEnv,
 ): Promise<InlineConfig> {
   let conf = config
-
+  // 遍历前二次排序
   for (const p of getSortedPluginsByHook('config', plugins)) {
     const hook = p.config
     const handler = hook && 'handler' in hook ? hook.handler : hook

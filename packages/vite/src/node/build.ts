@@ -422,6 +422,7 @@ export function resolveBuildOptions(
   return resolved
 }
 
+// 用户配置在 inlineConfig 属性中
 export async function resolveBuildPlugins(config: ResolvedConfig): Promise<{
   pre: Plugin[]
   post: Plugin[]

@@ -27,7 +27,7 @@ import { dynamicImportVarsPlugin } from './dynamicImportVars'
 import { importGlobPlugin } from './importMetaGlob'
 
 export async function resolvePlugins(
-  config: ResolvedConfig,
+  config: ResolvedConfig, // 用户配置在 inlineConfig 属性中
   prePlugins: Plugin[],
   normalPlugins: Plugin[],
   postPlugins: Plugin[],
@@ -136,17 +136,41 @@ export function createPluginHookUtils(
   }
 }
 
+// 对 [...prePlugins, ...normalPlugins, ...postPlugins] 二次排序
 export function getSortedPluginsByHook(
-  hookName: keyof Plugin,
+  hookName: keyof Plugin, // 字符串 'config'
   plugins: readonly Plugin[],
 ): Plugin[] {
   const pre: Plugin[] = []
   const normal: Plugin[] = []
   const post: Plugin[] = []
   for (const plugin of plugins) {
+    // 这里需要获取vite插件的名称
     const hook = plugin[hookName]
     if (hook) {
+      /**
+       * {
+       *  name:'vite:module',
+       *  config:{
+       *    order:'pre',
+       *    handler(){
+       *
+       *    }
+       *  },
+       *  resoveId(){
+       *
+       *  },
+       *  load(){
+       *
+       *  },
+       *  transoform(){
+       *
+       *  },
+       *  ...
+       * }
+       */
       if (typeof hook === 'object') {
+        // 二次排序
         if (hook.order === 'pre') {
           pre.push(plugin)
           continue
@@ -159,5 +183,6 @@ export function getSortedPluginsByHook(
       normal.push(plugin)
     }
   }
+  // 一般用户的插件config没有配置成对象形式，且设置order的话就是，传回去的顺序和传进来的顺序是一致的
   return [...pre, ...normal, ...post]
 }

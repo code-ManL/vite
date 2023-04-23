@@ -120,6 +120,7 @@ cli
     // is ok here
     const { createServer } = await import('./server')
     try {
+      // 入口
       const server = await createServer({
         root,
         base: options.base,

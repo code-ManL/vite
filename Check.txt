@@ -1,0 +1,7 @@
+cli -> 
+createServer(server/index.ts) ->
+resolveConfig(config.ts)，loadConfigFromFile(config.ts) -> 
+mergeConfig(utils),mergeConfigRecursively(utils) -> 
+resolvePlugins(plugins/index.ts) -> 
+resolveBuildPlugins(build.ts) -> 
+buildEsbuildPlugin(esbuild.ts)

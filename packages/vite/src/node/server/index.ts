@@ -335,6 +335,7 @@ export interface ResolvedServerUrls {
   network: string[]
 }
 
+// 入口函数
 export async function createServer(
   inlineConfig: InlineConfig = {},
 ): Promise<ViteDevServer> {
@@ -345,6 +346,7 @@ export async function _createServer(
   inlineConfig: InlineConfig = {},
   options: { ws: boolean },
 ): Promise<ViteDevServer> {
+  // 获取到配置文件
   const config = await resolveConfig(inlineConfig, 'serve')
 
   if (isDepsOptimizerEnabled(config, false)) {
