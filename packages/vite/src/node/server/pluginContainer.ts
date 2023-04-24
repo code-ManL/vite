@@ -573,6 +573,7 @@ export async function createPluginContainer(
   let closed = false
 
   const container: PluginContainer = {
+    // 立即执行，执行各个plugin的options钩子，内部也会根据options的order进行排序
     options: await (async () => {
       let options = rollupOptions
       for (const optionsHook of getSortedPluginHooks('options')) {
@@ -592,6 +593,7 @@ export async function createPluginContainer(
 
     getModuleInfo,
 
+    // 等会sercer/index.ts中会进行调用
     async buildStart() {
       await hookParallel(
         'buildStart',

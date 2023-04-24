@@ -383,6 +383,7 @@ export async function _createServer(
     container.resolveId(url, undefined, { ssr }),
   )
 
+  // 生成 config 容器
   const container = await createPluginContainer(config, moduleGraph, watcher)
   const closeHttpServer = createServerCloseFn(httpServer)
 
@@ -675,6 +676,7 @@ export async function _createServer(
     if (initingServer) return initingServer
 
     initingServer = (async function () {
+      // 调用buildStart函数，buildStart函数是在server/pluginContainer.ts中注入的，内部也会进行排序
       await container.buildStart({})
       initingServer = undefined
       serverInited = true

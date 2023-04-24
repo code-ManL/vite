@@ -637,6 +637,7 @@ export async function resolveConfig(
 
   const optimizeDeps = config.optimizeDeps || {}
 
+  // 设置base_url
   const BASE_URL = resolvedBase
 
   // resolve worker
@@ -660,6 +661,7 @@ export async function resolveConfig(
     getSortedPluginHooks: undefined!,
   }
 
+  // 最终配置
   const resolvedConfig: ResolvedConfig = {
     configFile: configFile ? normalizePath(configFile) : undefined,
     configFileDependencies: configFileDependencies.map((name) =>
@@ -678,7 +680,7 @@ export async function resolveConfig(
     isWorker: false,
     mainConfig: null,
     isProduction,
-    plugins: userPlugins,
+    plugins: userPlugins, // 正常顺序
     esbuild:
       config.esbuild === false
         ? false
