@@ -158,7 +158,7 @@ export function createPluginHookUtils(
 
 // 对 [...prePlugins, ...normalPlugins, ...postPlugins] 二次排序
 export function getSortedPluginsByHook(
-  hookName: keyof Plugin, // 字符串 'config'
+  hookName: keyof Plugin, // 字符串 'config' | 'configResolved' | 'buildStart'
   plugins: readonly Plugin[],
 ): Plugin[] {
   const pre: Plugin[] = []
@@ -203,6 +203,6 @@ export function getSortedPluginsByHook(
       normal.push(plugin)
     }
   }
-  // 一般用户的插件config没有配置成对象形式，且设置order的话就是，传回去的顺序和传进来的顺序是一致的
+  // 一般用户的插件config没有配置成对象形式且设置order的话，传回去的顺序和传进来的顺序是一致的
   return [...pre, ...normal, ...post]
 }

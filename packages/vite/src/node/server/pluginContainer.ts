@@ -147,6 +147,7 @@ export async function createPluginContainer(
     root,
     build: { rollupOptions },
   } = config
+
   const { getSortedPluginHooks, getSortedPlugins } =
     createPluginHookUtils(plugins)
 

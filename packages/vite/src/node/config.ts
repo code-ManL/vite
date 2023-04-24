@@ -540,6 +540,7 @@ export async function resolveConfig(
   // During dev, we ignore relative base and fallback to '/'
   // For the SSR build, relative base isn't possible by means
   // of import.meta.url.
+
   // 设置baseUrl
   const resolvedBase = relativeBaseShortcut
     ? !isBuild || config.build?.ssr
@@ -753,7 +754,7 @@ export async function resolveConfig(
     createPluginHookUtils(resolvedConfig.worker.plugins),
   )
 
-  // call configResolved hooks 正式开始执行plugins
+  // call configResolved hooks,正式开始执行含有 configResolved 的 plugins，内部会根据各个 plugins 的 configResolved 排序后再执行
   await Promise.all([
     ...resolved
       .getSortedPluginHooks('configResolved')

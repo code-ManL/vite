@@ -346,7 +346,7 @@ export async function _createServer(
   inlineConfig: InlineConfig = {},
   options: { ws: boolean },
 ): Promise<ViteDevServer> {
-  // 获取到配置文件
+  // 整理配置文件，执行含有config钩子和configResolved钩子的plugin，执行这些plugins的这两个钩子之前，都会进行排序，因为这两个钩子的order属性的优先级会更高一点
   const config = await resolveConfig(inlineConfig, 'serve')
 
   if (isDepsOptimizerEnabled(config, false)) {

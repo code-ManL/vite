@@ -5,3 +5,10 @@ mergeConfig(utils),mergeConfigRecursively(utils) ->
 resolvePlugins(plugins/index.ts) -> 
 resolveBuildPlugins(build.ts) -> 
 buildEsbuildPlugin(esbuild.ts)
+
+
+
+plugin.config.order 的优先级比 plugin.enfore 的高
+先排序plugin.enforce,执行一遍plugins，顺序根据plugin.config.order,再执行一遍plugins，顺序根据plugin.config.order
+再执行一遍plugins，顺序根据plugin.options.order
+再执行一遍plugins，顺序根据plugin.buildStart.order
