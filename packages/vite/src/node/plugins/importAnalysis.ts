@@ -194,6 +194,7 @@ export function importAnalysisPlugin(config: ResolvedConfig): Plugin {
     return _env.replace('"__vite__ssr__"', ssr + '')
   }
 
+  // 只有在 server 环境才走
   return {
     name: 'vite:import-analysis',
 
@@ -386,6 +387,8 @@ export function importAnalysisPlugin(config: ResolvedConfig): Plugin {
           try {
             // delay setting `isSelfAccepting` until the file is actually used (#7870)
             // We use an internal function to avoid resolving the url again
+
+            // 终于找到了 resolveId钩子 执行的地方
             const depModule = await moduleGraph._ensureEntryFromUrl(
               unwrapId(url),
               ssr,

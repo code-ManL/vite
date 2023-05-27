@@ -380,6 +380,7 @@ export async function _createServer(
   ) as FSWatcher
 
   const moduleGraph: ModuleGraph = new ModuleGraph((url, ssr) =>
+    // 调用 resolveId 钩子
     container.resolveId(url, undefined, { ssr }),
   )
 
@@ -435,6 +436,7 @@ export async function _createServer(
       }
     },
     async listen(port?: number, isRestart?: boolean) {
+      // 开启服务
       await startServer(server, port)
       if (httpServer) {
         server.resolvedUrls = await resolveServerUrls(
@@ -442,6 +444,7 @@ export async function _createServer(
           config.server,
           config,
         )
+        // 打开浏览器
         if (!isRestart && config.server.open) server.openBrowser()
       }
       return server
@@ -528,9 +531,11 @@ export async function _createServer(
     }
   }
 
+  // 热模块函数
   const onHMRUpdate = async (file: string, configOnly: boolean) => {
     if (serverConfig.hmr !== false) {
       try {
+        // hmr执行函数
         await handleHMRUpdate(file, server, configOnly)
       } catch (err) {
         ws.send({
@@ -547,6 +552,7 @@ export async function _createServer(
     await onHMRUpdate(file, true)
   }
 
+  // 监听到变化
   watcher.on('change', async (file) => {
     file = normalizePath(file)
     // invalidate module graph cache on file change
@@ -568,6 +574,7 @@ export async function _createServer(
         { timestamp: true },
       )
       const file = getShortName(mod.file!, config.root)
+      // ？？？？？？
       updateModules(
         file,
         [...mod.importers],
@@ -686,20 +693,25 @@ export async function _createServer(
 
   if (!middlewareMode && httpServer) {
     // overwrite listen to init optimizer before server start
+    // 重写httpServer旧的listen，bind改变this指向，确保指向httpServer
     const listen = httpServer.listen.bind(httpServer)
+    // 重写了
     httpServer.listen = (async (port: number, ...args: any[]) => {
       try {
+        // 执行buildStart
         await initServer()
       } catch (e) {
         httpServer.emit('error', e)
         return
       }
+      // 调用旧的httpServer.listen
       return listen(port, ...args)
     }) as any
   } else {
     if (options.ws) {
       ws.listen()
     }
+    // 执行buildStart
     await initServer()
   }
 

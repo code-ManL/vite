@@ -245,7 +245,7 @@ export class ModuleGraph {
     return this._ensureEntryFromUrl(rawUrl, ssr, setIsSelfAccepting)
   }
 
-  /**
+  /**_resolveUrl
    * @internal
    */
   async _ensureEntryFromUrl(
@@ -262,6 +262,7 @@ export class ModuleGraph {
       return mod
     }
     const modPromise = (async () => {
+      // 执行container.resolveId
       const [url, resolvedId, meta] = await this._resolveUrl(
         rawUrl,
         ssr,

@@ -44,3 +44,5 @@ export function createPluginHookUtils(
   }
 }
 ```
+
+importAnalysis.ts 执行 container.resolveId 钩子

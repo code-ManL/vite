@@ -136,6 +136,7 @@ cli
         throw new Error('HTTP server not available')
       }
 
+      //
       await server.listen()
 
       const info = server.config.logger.info

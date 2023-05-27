@@ -142,7 +142,7 @@ export async function createPluginContainer(
   watcher?: FSWatcher,
 ): Promise<PluginContainer> {
   const {
-    plugins,
+    plugins, // 当中既包含vite内部插件，也包含用户插件
     logger,
     root,
     build: { rollupOptions },
@@ -614,6 +614,7 @@ export async function createPluginContainer(
 
       let id: string | null = null
       const partial: Partial<PartialResolvedId> = {}
+      // 先根据plugins当中的resolveId钩子排序
       for (const plugin of getSortedPlugins('resolveId')) {
         if (!plugin.resolveId) continue
         if (skip?.has(plugin)) continue
@@ -625,6 +626,7 @@ export async function createPluginContainer(
           'handler' in plugin.resolveId
             ? plugin.resolveId.handler
             : plugin.resolveId
+        // 正式执行各个插件的 resolveId钩子
         const result = await handler.call(ctx as any, rawId, importer, {
           assertions: options?.assertions ?? {},
           custom: options?.custom,
