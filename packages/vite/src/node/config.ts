@@ -940,6 +940,7 @@ export async function loadConfigFromFile(
     return null
   }
 
+  // 是否为mjs mts ms,不是es就是cjs
   let isESM = false
   if (/\.m[jt]s$/.test(resolvedPath)) {
     isESM = true
@@ -947,6 +948,7 @@ export async function loadConfigFromFile(
     isESM = false
   } else {
     // check package.json for type: "module" and set `isESM` to true
+    // js ts
     try {
       const pkg = lookupFile(configRoot, ['package.json'])
       isESM =
@@ -955,7 +957,7 @@ export async function loadConfigFromFile(
   }
 
   try {
-    // bundle用户配置
+    // bundle用户配置,bundleConfigFile内部会用esbuild对用户的配置进行打包
     const bundled = await bundleConfigFile(resolvedPath, isESM)
     // 加工用户配置，获取用户配置
     const userConfig = await loadConfigFromBundledFile(
@@ -1000,7 +1002,7 @@ async function bundleConfigFile(
     target: ['node14.18', 'node16'],
     platform: 'node',
     bundle: true,
-    format: isESM ? 'esm' : 'cjs',
+    format: isESM ? 'esm' : 'cjs', // 根据用户配置决定打包产物的格式
     mainFields: ['main'],
     sourcemap: 'inline',
     metafile: true,
@@ -1011,6 +1013,7 @@ async function bundleConfigFile(
     },
     plugins: [
       {
+        // 对裸模块打标，因为热模块监听只需要监听本地配置文件以及本地依赖的更改
         name: 'externalize-deps',
         setup(build) {
           const options: InternalResolveOptionsWithOverrideConditions = {
@@ -1126,6 +1129,7 @@ async function loadConfigFromBundledFile(
     const extension = path.extname(fileName)
     const realFileName = await fsp.realpath(fileName)
     const loaderExt = extension in _require.extensions ? extension : '.js'
+    // 保存原生require
     const defaultLoader = _require.extensions[loaderExt]!
 
     _require.extensions[loaderExt] = (module: NodeModule, filename: string) => {
